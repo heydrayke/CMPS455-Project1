@@ -1,5 +1,5 @@
 //initializing classes
-
+import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
 
@@ -15,6 +15,11 @@ public class Main {
     private static int finishedWriters;
     private static int readersInBatch;
     private static int batchSize;
+    private static final Random random = new Random();
+    private static final Semaphore batchStartMutex = new Semaphore(1, true);
+    private static final Semaphore allReadersStarted = new Semaphore(0, true);
+    private static int readersStarted;
+
     public static void main(String[] args) {
         System.out.println("Reader/Writer Begin");
         task2();
@@ -22,7 +27,7 @@ public class Main {
     public static void task2() {
         //this first section is going to get the values from the user for readers writers, and readers at once
         Scanner input = new Scanner(System.in);
-        System.out.print("How many thread to create? (1-10000)");
+        System.out.print("How many reader thread to create? (1-10000)");
         totalReaders = input.nextInt();
         System.out.print("how many writer threads to create? (1-10000)");
         totalWriters = input.nextInt();
@@ -43,11 +48,11 @@ public class Main {
 
         //makes the reader and writer threads
         for (int i=0;i<totalReaders;i++){
-            readers[i] = new Thread(new Reader(i+1));
+            readers[i] = new Thread(new Reader(i));
             readers[i].start();
         }
         for (int i=0;i<totalWriters;i++){
-            writers[i] = new Thread(new Writer(i+1));
+            writers[i] = new Thread(new Writer(i));
             writers[i].start();
         }
         //makes sure the threads are finished
@@ -68,13 +73,33 @@ public class Main {
     //this handles the reader function and lets the reader semaphore activate and execute
     public static void read(int readerNum) throws InterruptedException {
         readerCt.acquire();
-        System.out.println("R" + readerNum + " starts reading");
-        Thread.sleep(50);
-        System.out.println("R" + readerNum + " done reading");
+
+        System.out.println("R" + readerNum + " started reading");
+        //barrier for the readers to all start actually reading at the same time. This stops
+        //the readers from finishing while others are starting.
+        batchStartMutex.acquire();
+        readersStarted++;
+
+        if (readersStarted == batchSize) {
+            readersStarted = 0;
+            allReadersStarted.release(batchSize);
+        }
+
+        batchStartMutex.release();
+        allReadersStarted.acquire();
+        //wait cycle
+        int wait1 = random.nextInt(4) + 3;
+        int count = 0;
+        while (count < wait1) {
+            Thread.yield();
+            count++;
+        }
+
         RWMutex.acquire();
         finishedReaders++;
         readersInBatch++;
-        // The final reader in the batch passes the permit to the one writer
+        System.out.println("R" + readerNum + " finished reading. Total Reads:" + readersInBatch);
+        // The final reader lets one writer run.
         if (readersInBatch == batchSize) {
             readersInBatch = 0;
             if (finishedWriters < totalWriters) {
@@ -83,7 +108,6 @@ public class Main {
                 startNextReaderBatch();
             }
         }
-
         RWMutex.release();
     }
     //this function keeps track of the permit for the reader control semaphore and allocates the
@@ -103,9 +127,9 @@ public class Main {
     //if all the readers are done.
     public static void write(int writerNum) throws InterruptedException{
         writerC.acquire();
-        System.out.println("W"+writerNum+"starts writing");
+        System.out.println("W" + writerNum + " started writing");
         Thread.sleep(50);
-        System.out.println("W"+writerNum+"done writing");
+        System.out.println("W" + writerNum + " finished writing");
         RWMutex.acquire();
         finishedWriters++;
 
