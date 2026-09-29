@@ -32,6 +32,8 @@ public class DiningPhilosopher {
         Semaphore enterRoom = new Semaphore(0);
         Semaphore sitDown = new Semaphore(0);
         Semaphore getUp = new Semaphore(0);
+        Semaphore doneEating = new Semaphore(0);
+        Semaphore mayLeave = new Semaphore(0);
         Semaphore meals = new Semaphore(M);
 
         Semaphore[] chopsticks = createChopsticks(P);  // Create stix.
@@ -42,15 +44,19 @@ public class DiningPhilosopher {
             Semaphore right = chopsticks[(i+1) % P];
 
             if (i == P - 1) {
-                threads[i] = new Thread(new Philosopher(i, right, left, meals, enterRoom, sitDown, getUp)); // If this is the last one, flip the grab
+                threads[i] = new Thread(new Philosopher(i, right, left, meals, enterRoom, sitDown, getUp, doneEating, mayLeave)); // If this is the last one, flip the grab
             } else {
-                threads[i] = new Thread(new Philosopher(i, left, right, meals, enterRoom, sitDown, getUp)); // Normal philosopher, not last.
+                threads[i] = new Thread(new Philosopher(i, left, right, meals, enterRoom, sitDown, getUp, doneEating, mayLeave)); // Normal philosopher, not last.
             }
             threads[i].start();
         }
         enterRoom.acquire(P);  // Puts philosophers waiting until all P are there.
         System.out.println("All " + P + " philosophers have arrived. All may sit.");
         sitDown.release(P);
+
+        doneEating.acquire(P);
+        System.out.println("All philosophers are done eating. They rise to leave.");
+        mayLeave.release(P);  // Releases permission slips to leave.
 
         getUp.acquire(P);  // Makes philosophers wait until last is done eating.
         System.out.println("Everyone is done. Goodbye!");
@@ -69,10 +75,10 @@ class Philosopher implements Runnable {
 
     Random random = new Random();
     int name;
-    Semaphore leftChopstick, rightChopstick, enterRoom, sitDown, getUp, meals;
+    Semaphore leftChopstick, rightChopstick, enterRoom, sitDown, getUp, meals, doneEating, mayLeave;
 
 
-    public Philosopher(int name, Semaphore firstChopstick, Semaphore secondChopstick, Semaphore meals, Semaphore enterRoom, Semaphore sitDown, Semaphore getUp) {
+    public Philosopher(int name, Semaphore firstChopstick, Semaphore secondChopstick, Semaphore meals, Semaphore enterRoom, Semaphore sitDown, Semaphore getUp, Semaphore doneEating, Semaphore mayLeave) {
         this.name = name;
         this.leftChopstick = firstChopstick;
         this.rightChopstick = secondChopstick;
@@ -80,6 +86,8 @@ class Philosopher implements Runnable {
         this.enterRoom = enterRoom;
         this.sitDown = sitDown;
         this.getUp = getUp;
+        this.doneEating = doneEating;
+        this.mayLeave = mayLeave;
     }
 
     public void run() {
@@ -119,6 +127,8 @@ class Philosopher implements Runnable {
                 }
                 System.out.println("*" + name + " finishes thinking*");
             }
+            doneEating.release();
+            mayLeave.acquire();
             System.out.println(name + " leaves.");
             getUp.release();
         } catch (InterruptedException e) {
