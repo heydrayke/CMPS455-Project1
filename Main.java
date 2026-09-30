@@ -21,11 +21,41 @@ public class Main {
     private static int readersStarted;
 
     public static void main(String[] args) throws InterruptedException {
-        System.out.println("Reader/Writer Begin");
-        task2();
-        System.out.println("Hungry Philosophers Begin");
+
+        int taskSelection = checkArg(args);
+        if (taskSelection < 0) {
+            printTasks();
+            System.exit(1);
+        }
+
+        switch (taskSelection) {
+            case 0:
+                System.out.println("No Arguments given, running both tasks.");
+                System.out.println("\nHungry Philosophers Begin");
+                DiningPhilosopher.main(args);
+                System.out.println("\nReader/Writer Begin");
+                task2();
+                break;
+
+            case 1:
+                System.out.println("Program Arguments: " + args[0] + " " + args[1]);
+                System.out.println("Hungry Philosophers Begin");
+                DiningPhilosopher.main(args);
+                break;
+
+            case 2:
+                System.out.println("Program Arguments: " + args[0] + " " + args[1]);
+                System.out.println("Reader/Writer Begin");
+                task2();
+                break;
+        }
+
+
+        //System.out.println("Reader/Writer Begin");
+        //task2();
+        //System.out.println("Hungry Philosophers Begin");
         //runs the dining philosopher problem from its own file; this is what you were trying to do zayne
-        DiningPhilosopher.main(args);
+        //DiningPhilosopher.main(args);
     }
 
     public static void task2() {
@@ -146,4 +176,49 @@ public class Main {
         RWMutex.release();
     }
 
+    // Method to check input arguments
+    // Returns -1 if any invalid inputs detected
+    // If valid, returns input to be processed
+    private static int checkArg(String[] args) {
+
+        // Only parse if arguments are present
+        if (args.length > 0) {
+
+            // Check flag, error if not '-A'
+            if (!args[0].equals("-A")) {
+                System.out.println("\nError: " + args[0] + " not a known flag.");
+                return -1;
+            }
+
+            // Error if flag is -A but no task number
+            if (args.length < 2) {
+                System.out.println("\nError: -A requires a value.");
+                return -1;
+            }
+            //Error if flag is -A but too many arguments
+            else if (args.length > 2) {
+                System.out.println("\nError: Too many arguments.");
+                return -1;
+            }
+            // Grab int from command argument
+            try {
+                int v = Integer.parseInt(args[1].trim());
+                if (v < 1 || v > 2) {
+                    System.out.println("\nError: Task must be 1 or 2.");
+                    return -1;
+                }
+                return v; // Return task number once checked
+            } catch (NumberFormatException e) {
+                System.out.println("\nError: " + args[1] + " is not valid.");
+                return -1;
+            }
+        }
+        return 0;
+    }
+
+    // Print task options
+    private static void printTasks() {
+        System.out.println("\nPlease Choose: -A <task #>\n 1 -> Dining Philosophers\n " +
+                "2 -> Readers-Writer");
+    }
 }
