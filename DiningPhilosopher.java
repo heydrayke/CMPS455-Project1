@@ -36,6 +36,7 @@ public class DiningPhilosopher {
         Semaphore mayLeave = new Semaphore(0);
         Semaphore meals = new Semaphore(M);
 
+
         Semaphore[] chopsticks = createChopsticks(P);  // Create stix.
         Thread[] threads = new Thread[P];  // Thread instance loaded.
 
@@ -76,7 +77,8 @@ class Philosopher implements Runnable {
     Random random = new Random();
     int name;
     Semaphore leftChopstick, rightChopstick, enterRoom, sitDown, getUp, meals, doneEating, mayLeave;
-
+    private static int totalMealsEaten = 0;
+    private static final Semaphore mealCountMutex = new Semaphore(1, true);
 
     public Philosopher(int name, Semaphore firstChopstick, Semaphore secondChopstick, Semaphore meals, Semaphore enterRoom, Semaphore sitDown, Semaphore getUp, Semaphore doneEating, Semaphore mayLeave) {
         this.name = name;
@@ -111,8 +113,11 @@ class Philosopher implements Runnable {
                     count++;
                 }
                 System.out.println("*" + name + " finishes eating*");
+                mealCountMutex.acquire();
+                totalMealsEaten++;
+                System.out.println(name + " ate a bowl. Total meals eaten: " + totalMealsEaten);
+                mealCountMutex.release();
 
-                System.out.println(name + " ate a bowl.");
                 leftChopstick.release();
                 System.out.println(name + " put down their left chopstick now.");
                 rightChopstick.release();
