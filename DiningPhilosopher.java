@@ -16,8 +16,8 @@ public class DiningPhilosopher {
             System.exit(1);
         }
         int P = scanner.nextInt();  // Philosopher count.
-        if (P < 2) {
-            System.out.println("needs at least 2 philosophers. exiting.");
+        if (P < 1) {
+            System.out.println("needs at least 1 philosophers. exiting.");
             System.exit(1);
         }
 
@@ -44,13 +44,13 @@ public class DiningPhilosopher {
 
 
 
-
-        Semaphore[] chopsticks = createChopsticks(P);  // Create stix.
+        int numChopsticks = (P == 1) ? 2 : P; // Checks for lone philosopher, sets P=2 if so
+        Semaphore[] chopsticks = createChopsticks(numChopsticks);  // Create stix.
         Thread[] threads = new Thread[P];  // Thread instance loaded.
         long startTime = System.nanoTime();
         for (int i = 0; i < P; i++) {
             Semaphore left = chopsticks[i];
-            Semaphore right = chopsticks[(i+1) % P];
+            Semaphore right = chopsticks[(i+1) % numChopsticks];
 
 
             if (i == P - 1) {
