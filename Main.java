@@ -162,7 +162,13 @@ public class Main {
     public static void write(int writerNum) throws InterruptedException{
         writerC.acquire();
         System.out.println("W" + writerNum + " started writing");
-        Thread.sleep(50);
+        //wait cycle
+        int wait2 = random.nextInt(4) + 3;
+        int count1 = 0;
+        while (count1 < wait2) {
+            Thread.yield();
+            count1++;
+        }
         System.out.println("W" + writerNum + " finished writing");
         RWMutex.acquire();
         finishedWriters++;
