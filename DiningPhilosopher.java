@@ -29,6 +29,8 @@ public class DiningPhilosopher {
             System.exit(1);
         }
 
+        scanner.close();
+
         Semaphore enterRoom = new Semaphore(0);
         Semaphore sitDown = new Semaphore(0);
         Semaphore getUp = new Semaphore(0);
