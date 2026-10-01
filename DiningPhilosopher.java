@@ -13,8 +13,8 @@ public class DiningPhilosopher {
             System.exit(1);
         }
         int P = scanner.nextInt();  // Philosopher count.
-        if (P < 2) {
-            System.out.println("needs at least 2 philosophers. exiting.");
+        if (P < 1) {
+            System.out.println("needs at least 1 philosopher. exiting.");
             System.exit(1);
         }
 
@@ -36,12 +36,13 @@ public class DiningPhilosopher {
         Semaphore mayLeave = new Semaphore(0);
         Semaphore meals = new Semaphore(M);
 
-        Semaphore[] chopsticks = createChopsticks(P);  // Create stix.
+        int numChopsticks = (P == 1) ? 2 : P; // Checks for 1 philosopher case, sets P = 2 if so
+        Semaphore[] chopsticks = createChopsticks(numChopsticks);  // Create stix.
         Thread[] threads = new Thread[P];  // Thread instance loaded.
 
         for (int i = 0; i < P; i++) {
             Semaphore left = chopsticks[i];
-            Semaphore right = chopsticks[(i+1) % P];
+            Semaphore right = chopsticks[(i+1) % numChopsticks]; // modulo numChopsticks instead of P
 
             if (i == P - 1) {
                 threads[i] = new Thread(new Philosopher(i, right, left, meals, enterRoom, sitDown, getUp, doneEating, mayLeave)); // If this is the last one, flip the grab
