@@ -59,14 +59,50 @@ public class Main {
     }
 
     public static void task2() {
-        //this first section is going to get the values from the user for readers writers, and readers at once
+        //this first section is going to get the values from the user for readers,
+        //writers, and readers at once
         Scanner input = new Scanner(System.in);
-        System.out.print("How many reader thread to create? (1-10000)");
+
+        // gets value of readers and makes sure they are in parameters (graceful)
+        System.out.print("How many reader threads to create? (1-10000): ");
+
+        if (!input.hasNextInt()) {
+            System.out.println("Invalid input. Reader count must be an integer.");
+            System.exit(1);
+        }
         totalReaders = input.nextInt();
-        System.out.print("how many writer threads to create? (1-10000)");
+
+        if (totalReaders < 1 || totalReaders > 10000) {
+            System.out.println("Invalid input. Reader count must be between 1 and 10000.");
+            System.exit(1);
+        }
+
+        // Gets number of writers and ensures that they are in parameters (graceful)
+        System.out.print("How many writer threads to create? (1-10000): ");
+
+        if (!input.hasNextInt()) {
+            System.out.println("Invalid input. Writer count must be an integer.");
+            System.exit(1);
+        }
         totalWriters = input.nextInt();
-        System.out.print("How many readers can read at once?");
+        if (totalWriters < 1 || totalWriters > 10000) {
+            System.out.println("Invalid input. Writer count must be between 1 and 10000.");
+            System.exit(1);
+        }
+
+        // gets number of readers per batch, ensures they are in parameters (graceful)
+        System.out.print("How many readers can read at once? (1-" + totalReaders + "): ");
+
+        if (!input.hasNextInt()) {
+            System.out.println("Invalid input. Maximum reader count must be an integer.");
+            System.exit(1);
+        }
+        //makes sure max readers per batch isnt more than the total amt of readers
         maxReaders = input.nextInt();
+        if (maxReaders < 1 || maxReaders > totalReaders) {
+            System.out.println("Invalid input. Maximum readers must be between 1 and " + totalReaders + ".");
+            System.exit(1);
+        }
         //this section determines if there will be a full batch of readers and if it is finished with all of them
         if (maxReaders < totalReaders) {
             batchSize = maxReaders;
@@ -101,7 +137,7 @@ public class Main {
             Thread.currentThread().interrupt();
         }
         //not closing the scanner here since that closes System.in and the philosophers need it after
-        System.out.println("Writers are finished.");
+        System.out.println("Readers and Writers are finished.");
         System.out.println("done");
     }
     //this handles the reader function and lets the reader semaphore activate and execute
